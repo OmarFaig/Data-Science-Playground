@@ -10,10 +10,11 @@ option = st.selectbox(
 
 st.title(f" {option} Finance Stock Price App")
 
-
+n_years = st.slider('Years of prediction:', 0, 4)
+period = n_years * 365
 tickerData = yf.Ticker(option)
 
-tickerDf = tickerData.history(period='1d', start='2010-5-31', end='2020-5-31')
+tickerDf = tickerData.history(period='1d', start='2010-5-31', end='2024-11-11')
 
 
 # Create a line chart for the Close prices
@@ -32,14 +33,24 @@ st.altair_chart(close_chart, use_container_width=True)
 
 st.title('Volume')
 st.altair_chart(volume_chart, use_container_width=True)
-tickerData = model.prepare_data(tickerdf=tickerDf)
-model, X_test,Y_test = model.create_model(tickerdf=tickerData)
 
-st.write(f"Model Score on test data: {model.score(X_test,Y_test)}")
+tickerData = model.prepare_data(tickerdf=tickerDf)
+random_forrest_model, X_test,Y_test = model.create_random_forrest_model(tickerdf=tickerData)
+
+st.write(f" Random Forrest Model Score on test data: {random_forrest_model.score(X_test,Y_test)}")
 
 last_data = tickerData[['SMA_20','SMA_50','RSI','Volume']].iloc[-1]
-prediction = model.predict([last_data])
+prediction = random_forrest_model.predict([last_data])
 st.write(f'Current Price: ${tickerData["Close"].iloc[-1]:.2f}')
-st.write(f'Predicted Next Day Price: ${prediction[0]:.2f}')
+st.write(f'Predicted by RandomForrest Next Day Price: ${prediction[0]:.2f}')
         
 
+#prophet
+prophet_model=model.prophet_model(tickerData,period=period)
+print(prophet_model.tail())
+tomorrow_forecast = prophet_model.iloc[-1]  # Get last row which is tomorrow's forecast
+
+# Display results
+st.write(f'Predicted by Prophet Next Day Price: ${tomorrow_forecast.yhat:.2f}')
+st.write(f'Lower bound: ${tomorrow_forecast.yhat_lower:.2f}')
+st.write(f'Upper bound: ${tomorrow_forecast.yhat_upper:.2f}')

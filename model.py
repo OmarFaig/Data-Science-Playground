@@ -5,8 +5,10 @@ import altair as alt
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from datetime import datetime,timedelta
+from prophet import Prophet
 #download the data for the given timeframe
 
+@st.cache_data
 def download_data(stocks):
     tickerData = yf.Ticker(stocks)
     tickerDf = tickerData.history(period='1d', start='2010-5-31', end='2022-11-11')
@@ -60,8 +62,8 @@ def prepare_data(tickerdf):
  
      return tickerdf
 
-def create_model(tickerdf):
-    
+def create_random_forrest_model(tickerdf):
+
     X = tickerdf[['SMA_20', 'SMA_50', 'RSI','Volume']]
     y = tickerdf['Close'].shift(-1) # prediction of next day's closing price
     #remove last row since it is nan in y
@@ -86,3 +88,20 @@ def create_model(tickerdf):
 #data = prepare_data(data)
 #print(data.head())
 #print(create_model(data))
+
+#using prophet
+def prophet_model(data,period=None):
+    # Reset index and make copy to avoid modifying original data
+    data = data.reset_index()
+    
+    # Convert timezone-aware dates to timezone-naive
+    data['Date'] = data['Date'].dt.tz_localize(None)
+    
+    df_train = data[['Date','Close']]
+    df_train = df_train.rename(columns={"Date": "ds", "Close": "y"})
+
+    m = Prophet()
+    m.fit(df_train)
+    future = m.make_future_dataframe(periods=period)
+    forecast = m.predict(future)
+    return forecast
