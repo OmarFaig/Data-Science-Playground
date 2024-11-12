@@ -100,8 +100,22 @@ def prophet_model(data,period=None):
     df_train = data[['Date','Close']]
     df_train = df_train.rename(columns={"Date": "ds", "Close": "y"})
 
-    m = Prophet()
-    m.fit(df_train)
-    future = m.make_future_dataframe(periods=period)
-    forecast = m.predict(future)
-    return forecast
+        # Initialize and fit model
+    model = Prophet(
+            yearly_seasonality=True,
+            weekly_seasonality=True,
+            daily_seasonality=True
+        )
+        
+    model.fit(df_train)
+    
+    # Create future dates
+    if period is None:
+        period = 365  # Default to 1 year
+    future = model.make_future_dataframe(periods=period)
+    
+    # Make prediction
+    forecast = model.predict(future)
+    
+    return model, forecast
+        

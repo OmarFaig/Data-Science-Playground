@@ -3,6 +3,9 @@ import pandas as pd
 import streamlit as st
 import altair as alt
 import model
+from prophet.plot import plot_plotly
+from plotly import graph_objs as go
+from prophet import Prophet
 
 option = st.selectbox(
      'Which stock price would you like to see?',
@@ -46,11 +49,17 @@ st.write(f'Predicted by RandomForrest Next Day Price: ${prediction[0]:.2f}')
         
 
 #prophet
-prophet_model=model.prophet_model(tickerData,period=period)
-print(prophet_model.tail())
-tomorrow_forecast = prophet_model.iloc[-1]  # Get last row which is tomorrow's forecast
+model_prophet, forecast = model.prophet_model(tickerData, period=period)
+
+print(forecast.tail())
+tomorrow_forecast = forecast.iloc[-1]
 
 # Display results
 st.write(f'Predicted by Prophet Next Day Price: ${tomorrow_forecast.yhat:.2f}')
 st.write(f'Lower bound: ${tomorrow_forecast.yhat_lower:.2f}')
 st.write(f'Upper bound: ${tomorrow_forecast.yhat_upper:.2f}')
+st.write(f'Forecast plot for {n_years} years')
+
+# Create plot using the model and forecast
+fig = plot_plotly(model_prophet, forecast)  # Pass both model and forecast
+st.plotly_chart(fig)
