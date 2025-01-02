@@ -18,3 +18,5 @@ A machine learning application that predicts stock prices using Random Forest an
 ```bash
 git clone https://github.com/yourusername/stock-prediction-app.git
 cd stock-prediction-app
+python -m venv stockvenv
+source stockvenv/bin/activate  # Linux/Mac
